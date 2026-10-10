@@ -4,6 +4,8 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+- `/vibereel` slash command: install as a Claude Code plugin from this repo.
+
 ## [0.1.0] - 2026-10-10
 
 First public release.

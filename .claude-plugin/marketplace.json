@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "vibereel",
+  "description": "Turn a Claude Code session into a 30-second film.",
+  "owner": { "name": "Tanbir Hossain Ramim", "url": "https://github.com/TanbirRamim" },
+  "plugins": [
+    {
+      "name": "vibereel",
+      "source": "./",
+      "description": "/vibereel turns the session you're in into a 30-second film you can share.",
+      "category": "productivity",
+      "version": "0.1.0",
+      "homepage": "https://github.com/TanbirRamim/vibereel"
+    }
+  ]
+}

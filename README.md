@@ -25,6 +25,15 @@ Want a video for X, Slack or a PR?
 npx vibereel --gif --mp4
 ```
 
+## As a Claude Code slash command
+
+```
+/plugin marketplace add TanbirRamim/vibereel
+/plugin install vibereel@vibereel
+```
+
+Then type `/vibereel` at the end of any session (or `/vibereel --gif --mp4`) and it films the session you're in.
+
 ## What's in the film
 
 - your prompt, typed out
