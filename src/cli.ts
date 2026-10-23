@@ -76,8 +76,8 @@ function ago(ms: number) {
 const kb = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
 
 function openFile(p: string) {
-  const cmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open';
-  const args = process.platform === 'win32' ? ['/c', 'start', '', p] : [p];
+  const cmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open';
+  const args = [p];
   spawn(cmd, args, { detached: true, stdio: 'ignore' }).unref();
 }
 

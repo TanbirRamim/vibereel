@@ -4,6 +4,8 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+- Fix CodeQL alerts: open the output without a shell on Windows, escape quotes in player HTML attributes, and match `--!>` comment ends in the highlighter.
+
 ## [0.2.0] - 2026-10-23
 
 - Gemini CLI sessions: found under `~/.gemini/tmp` and parsed into the same timeline (prompts, shell runs, edits, thoughts, tokens).

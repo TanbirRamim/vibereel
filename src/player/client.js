@@ -13,7 +13,7 @@
   var AGENT_APP = R.source === 'codex' ? 'Codex' : R.source === 'gemini' ? 'Gemini CLI' : 'Claude Code';
 
   /* ---------- helpers ---------- */
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function easeOut(x) { x = clamp(x, 0, 1); return 1 - Math.pow(1 - x, 3); }
   function easeInOut(x) { x = clamp(x, 0, 1); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
@@ -37,7 +37,7 @@
   function base(p) { return p.split('/').pop(); }
 
   var KW = /^(const|let|var|function|return|if|else|for|while|import|from|export|default|class|extends|new|this|async|await|try|catch|throw|type|interface|def|self|None|True|False|true|false|null|undefined|fn|pub|use|mut|impl|struct|enum|match|package|func|in|of|as|with|yield|lambda|not|and|or|is|elif|public|private|static|void|int|string|boolean)$/;
-  var TOK = /(\/\/.*$|#(?![0-9a-fA-F]{3,8}\b).*$|\/\*.*?\*\/|<!--.*?-->)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_.]*(?:px|rem|em|ms|s|%)?\b|#[0-9a-fA-F]{3,8}\b)|([A-Za-z_$][\w$-]*)(?=\s*\()|([A-Za-z_$][\w$]*)/gm;
+  var TOK = /(\/\/.*$|#(?![0-9a-fA-F]{3,8}\b).*$|\/\*.*?\*\/|<!--.*?--!?>)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_.]*(?:px|rem|em|ms|s|%)?\b|#[0-9a-fA-F]{3,8}\b)|([A-Za-z_$][\w$-]*)(?=\s*\()|([A-Za-z_$][\w$]*)/gm;
   function hl(line) {
     var out = '', last = 0, m;
     TOK.lastIndex = 0;
