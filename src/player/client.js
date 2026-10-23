@@ -93,6 +93,24 @@
   R.touches.forEach(function (t) { (touchesByPath[t.path] = touchesByPath[t.path] || []).push(t); });
   var paths = Object.keys(touchesByPath);
 
+  /** "a/very/long/path.ts" -> "…long/path.ts", cut from the left so the file name survives */
+  function shortLeft(p, n) { return p.length > n ? '…' + p.slice(-(n - 1)) : p; }
+
+  /** 9:16: a flat list of full paths, so a folder can never be split from its files across the two columns */
+  function buildFlatRows(maxRows, width) {
+    var score = function (p) { return touchesByPath[p].some(function (t) { return t.type !== 'read'; }) ? 0 : 1; };
+    var keep = paths.slice();
+    var more = 0;
+    if (keep.length > maxRows) {
+      keep.sort(function (a, b) { return score(a) - score(b) || touchesByPath[a][0].at - touchesByPath[b][0].at; });
+      more = keep.length - (maxRows - 1);
+      keep = keep.slice(0, maxRows - 1);
+    }
+    var rows = keep.sort().map(function (p) { return { path: p, name: shortLeft(p, width), depth: 0 }; });
+    if (more) rows.push({ more: true, name: '+ ' + more + ' more files' });
+    return rows;
+  }
+
   function buildTreeRows(maxRows) {
     var sorted = paths.slice().sort(function (a, b) {
       var A = a.split('/'), B = b.split('/');
@@ -118,7 +136,7 @@
     // too many: flat list, edited files first
     var score = function (p) { return touchesByPath[p].some(function (t) { return t.type !== 'read'; }) ? 0 : 1; };
     var flat = paths.slice().sort(function (a, b) { return score(a) - score(b) || touchesByPath[a][0].at - touchesByPath[b][0].at; });
-    var keep = flat.slice(0, maxRows - 1).map(function (p) { return { path: p, name: p.length > 30 ? '…' + p.slice(-29) : p, depth: 0 }; });
+    var keep = flat.slice(0, maxRows - 1).map(function (p) { return { path: p, name: shortLeft(p, 30), depth: 0 }; });
     keep.push({ more: true, name: '+ ' + (flat.length - keep.length) + ' more files' });
     return keep;
   }
@@ -153,8 +171,7 @@
       '<div class="end" id="end"></div>';
     ['now', 'rows', 'tabs', 'ed', 'pill', 'tscroll', 'h-real', 'h-reel', 'h-tok', 'h-cost', 'h-tools', 'scrub', 'fill', 'end', 'fcount', 'tflash'].forEach(function (id) { el[id] = document.getElementById(id); });
 
-    var maxRows = vertical ? 12 : 23;
-    var tr = buildTreeRows(maxRows);
+    var tr = vertical ? buildFlatRows(12, 38) : buildTreeRows(23);
     el.rows.innerHTML = tr.map(function (r) {
       var pad = 14 + r.depth * 12;
       if (r.more) return '<div class="row more" style="padding-left:14px"><span class="nm">' + esc(r.name) + '</span></div>';
