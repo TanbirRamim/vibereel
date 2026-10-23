@@ -5,6 +5,7 @@ All notable changes to this project are written down here. The format follows [K
 ## [Unreleased]
 
 - Gemini CLI sessions: found under `~/.gemini/tmp` and parsed into the same timeline (prompts, shell runs, edits, thoughts, tokens).
+- Gemini CLI: read the current append-only `.jsonl` session logs (with `$set`, `$patch` and `$rewindTo` records) as well as legacy `.json` files, match slug-named project folders via `.project_root`, and honour `GEMINI_CLI_HOME` instead of the non-existent `GEMINI_DIR`. User prompts use `displayContent` when present.
 - `/vibereel` slash command: install as a Claude Code plugin from this repo.
 
 ## [0.1.0] - 2026-10-10

@@ -4,10 +4,68 @@ import { finalize, isTestCommand, makeEdit, outputLooksFailed, relPath, type Raw
 type Json = any;
 
 /**
- * Gemini CLI saves each chat as one JSON file under
- * ~/.gemini/tmp/<project>/chats/session-*.json:
- * { sessionId, startTime, messages: [{ type: 'user' | 'gemini' | 'info' | 'error', content, thoughts, tokens, model, toolCalls }] }
+ * Gemini CLI (packages/core/src/services/chatRecordingService.ts) records each chat under
+ * ~/.gemini/tmp/<project>/chats/. Current versions append JSONL to session-<time>-<id>.jsonl:
+ *   line 1: { sessionId, projectHash, startTime, lastUpdated, kind, directories }
+ *   then:   full MessageRecords (re-appended with the same id whenever they change),
+ *           { $set: {...metadata} }, { $rewindTo: id }, { $patch: { id, content, toolCalls, updates, removeIds, orderIds } }
+ * Older versions wrote one JSON ConversationRecord: { sessionId, projectHash, startTime, lastUpdated, messages }.
+ * MessageRecord: { id, timestamp, type: 'user' | 'gemini' | 'info' | 'error' | 'warning', content, displayContent,
+ *   toolCalls, thoughts: [{ subject, description, timestamp }], tokens: { input, output, cached, thoughts, tool, total }, model }
  */
+
+/** Rebuild the conversation the same way Gemini CLI's JSONL loader does. */
+export function loadGeminiRecord(raw: string): Json {
+  try {
+    const d = JSON.parse(raw);
+    if (Array.isArray(d)) return { messages: d };
+    if (d && Array.isArray(d.messages)) return d;
+  } catch { /* JSONL */ }
+  let meta: Json = {};
+  const msgs = new Map<string, Json>();
+  const patch = (p: Json) => {
+    const m = msgs.get(p?.id);
+    if (!m) return;
+    if (p.content !== undefined) m.content = p.content;
+    for (const tp of Array.isArray(p.toolCalls) ? p.toolCalls : []) {
+      const tc = (m.toolCalls ?? []).find((t: Json) => t.id === tp.id);
+      if (tc && 'result' in tp) tc.result = tp.result;
+    }
+  };
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    let r: Json;
+    try { r = JSON.parse(line); } catch { continue; }
+    if (!r || typeof r !== 'object') continue;
+    if (typeof r.$rewindTo === 'string') {
+      const ids = [...msgs.keys()], i = ids.indexOf(r.$rewindTo);
+      if (i === -1) msgs.clear(); else for (const id of ids.slice(i)) msgs.delete(id);
+    } else if (r.$patch && typeof r.$patch === 'object') {
+      const p = r.$patch;
+      if (typeof p.id === 'string') patch(p);
+      for (const u of Array.isArray(p.updates) ? p.updates : []) patch(u);
+      for (const id of Array.isArray(p.removeIds) ? p.removeIds : []) msgs.delete(id);
+      if (Array.isArray(p.orderIds)) {
+        const ordered = p.orderIds.filter((id: Json) => msgs.has(id)).map((id: string) => [id, msgs.get(id)] as const);
+        const keep = new Set(ordered.map(([id]: readonly [string, Json]) => id));
+        const rest = [...msgs].filter(([id]) => !keep.has(id));
+        msgs.clear();
+        for (const [id, m] of [...rest, ...ordered]) msgs.set(id, m);
+      }
+    } else if (typeof r.id === 'string') {
+      msgs.set(r.id, r);
+    } else if (r.$set && typeof r.$set === 'object') {
+      if (Array.isArray(r.$set.messages)) { msgs.clear(); for (const m of r.$set.messages) if (typeof m?.id === 'string') msgs.set(m.id, m); }
+      const { messages: _m, ...rest } = r.$set;
+      meta = { ...meta, ...rest };
+    } else if (typeof r.sessionId === 'string' && typeof r.projectHash === 'string') {
+      const { messages, ...rest } = r;
+      meta = { ...meta, ...rest };
+      for (const m of Array.isArray(messages) ? messages : []) if (typeof m?.id === 'string') msgs.set(m.id, m);
+    }
+  }
+  return { ...meta, messages: [...msgs.values()] };
+}
 
 function text(c: Json): string {
   if (typeof c === 'string') return c;
@@ -81,11 +139,10 @@ function toolEvents(call: Json, at: number, cwd?: string): Event[] {
 }
 
 export function parseGemini(json: string, idHint = 'session', cwdHint?: string): Timeline {
-  let d: Json;
-  try { d = JSON.parse(json); } catch { throw new Error('This Gemini CLI session file is not valid JSON.'); }
-  const messages: Json[] = Array.isArray(d) ? d : d?.messages;
+  const d = loadGeminiRecord(json);
+  const messages: Json[] = d.messages;
   if (!Array.isArray(messages) || !messages.length) throw new Error('No Gemini CLI messages found in this file.');
-  const cwd: string | undefined = d.cwd ?? d.projectRoot ?? cwdHint;
+  const cwd: string | undefined = cwdHint;
   const sessionId = String(d.sessionId ?? idHint);
 
   const stamps = messages.map((m) => Date.parse(m.timestamp)).filter(Number.isFinite);
@@ -103,12 +160,12 @@ export function parseGemini(json: string, idHint = 'session', cwdHint?: string):
   for (const m of messages) {
     const ts = Date.parse(m.timestamp);
     const at = Number.isFinite(ts) ? ts - start : 0;
-    const body = text(m.content).trim();
+    const body = text(m.type === 'user' && m.displayContent != null ? m.displayContent : m.content).trim();
     if (m.type === 'user') {
       if (body && !body.startsWith('/')) events.push({ kind: 'prompt', at, text: body });
       continue;
     }
-    if (m.type !== 'gemini' && m.type !== 'model') continue;
+    if (m.type !== 'gemini') continue;
     if (m.model) model = m.model;
     const thoughts = (m.thoughts ?? []).map((t: Json) => [t.subject, t.description].filter(Boolean).join(': ')).filter(Boolean).join('\n').trim();
     if (thoughts) events.push({ kind: 'thinking', at, text: thoughts });

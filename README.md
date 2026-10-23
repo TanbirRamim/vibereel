@@ -78,7 +78,7 @@ npx vibereel [options]
 
 Exporting video needs Chrome (or Chromium, Edge or Brave) and `ffmpeg` on your machine. vibereel finds them on its own; set `CHROME_PATH` if it doesn't. If either is missing, it tells you and still writes the HTML.
 
-Sessions are read from `~/.claude/projects`, `~/.codex/sessions` and `~/.gemini/tmp`. `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and `GEMINI_DIR` are respected.
+Sessions are read from `~/.claude/projects`, `~/.codex/sessions` and `~/.gemini/tmp`. `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and `GEMINI_CLI_HOME` are respected (Gemini CLI's legacy `.json` and current `.jsonl` chats are both read).
 
 ## What it doesn't do yet
 

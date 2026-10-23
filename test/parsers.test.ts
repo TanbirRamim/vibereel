@@ -4,12 +4,15 @@ import { parseClaude } from '../src/parsers/claude';
 import { parseCodex, patchToEdits } from '../src/parsers/codex';
 import { cleanShellOutput, parseGemini } from '../src/parsers/gemini';
 import { parseSession } from '../src/index';
-import { geminiProjectHash, sessionsForCwd } from '../src/sessions';
+import { geminiProjectHash, geminiRoot, geminiSessions, sessionsForCwd } from '../src/sessions';
+import os from 'node:os';
+import path from 'node:path';
 import { isTestCommand, lineDiff, makeTitle } from '../src/normalize';
 
 const demo = fs.readFileSync(new URL('../fixtures/demo-dark-mode.jsonl', import.meta.url), 'utf8');
 const codex = fs.readFileSync(new URL('../fixtures/codex-sample.jsonl', import.meta.url), 'utf8');
 const gemini = fs.readFileSync(new URL('../fixtures/gemini-sample.json', import.meta.url), 'utf8');
+const geminiJsonl = fs.readFileSync(new URL('../fixtures/gemini-sample.jsonl', import.meta.url), 'utf8');
 
 describe('claude parser', () => {
   const tl = parseClaude(demo);
@@ -126,6 +129,15 @@ describe('gemini parser', () => {
   it('auto-detects Gemini files', () => {
     expect(parseSession(gemini, 'session-2026.json').source).toBe('gemini');
   });
+  it('auto-detects Gemini JSONL files', () => {
+    expect(parseSession(geminiJsonl, 'session-2026-10-20T09-00-9f2c1a7e.jsonl').source).toBe('gemini');
+  });
+  it('replays the JSONL log (re-appended messages, $patch, $rewindTo, $set) to the same timeline', () => {
+    const j = parseGemini(geminiJsonl, 'x', '/Users/dev/blog');
+    expect(j.events).toEqual(tl.events);
+    expect(j.stats).toEqual(tl.stats);
+    expect(j.events.some((e) => e.kind === 'message' && e.text.includes('rewrite the whole file'))).toBe(false);
+  });
   it('works without token data', () => {
     const t = parseGemini(JSON.stringify({ sessionId: 's', messages: [{ type: 'user', timestamp: '2026-01-01T00:00:00Z', content: 'hi' }] }));
     expect(t.stats.tokens).toBe(0);
@@ -134,7 +146,33 @@ describe('gemini parser', () => {
     expect(cleanShellOutput('Command: ls\nOutput: (empty)\nError: (none)\nExit Code: 0')).toEqual({ text: '', ok: true });
     expect(cleanShellOutput('Command: x\nOutput: \nError: boom\nExit Code: 2').ok).toBe(false);
   });
-  it('finds sessions for a folder by project hash', () => {
+  it('finds sessions for a folder by its .project_root marker', () => {
+    const all = [{ source: 'gemini' as const, id: '1', file: '/h/.gemini/tmp/blog/chats/session-1.jsonl', mtime: 1, size: 1, cwd: '/Users/dev/blog' }];
+    expect(sessionsForCwd('/Users/dev/blog', all)).toHaveLength(1);
+    expect(sessionsForCwd('/Users/other/blog', all)).toHaveLength(0);
+  });
+  it('scans <GEMINI_CLI_HOME>/.gemini/tmp for .json and .jsonl chats, skipping subagents', () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vr-gem-'));
+    const prev = process.env.GEMINI_CLI_HOME;
+    process.env.GEMINI_CLI_HOME = home;
+    try {
+      const root = geminiRoot();
+      expect(root).toBe(path.join(home, '.gemini', 'tmp'));
+      fs.mkdirSync(path.join(root, 'blog', 'chats', 'parent'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'blog', '.project_root'), '/Users/dev/blog');
+      fs.writeFileSync(path.join(root, 'blog', 'chats', 'session-2026-10-20T09-00-9f2c1a7e.jsonl'), geminiJsonl);
+      fs.writeFileSync(path.join(root, 'blog', 'chats', 'parent', 'sub.jsonl'), geminiJsonl);
+      fs.mkdirSync(path.join(root, 'abc123', 'chats'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'abc123', 'chats', 'session-old.json'), gemini);
+      const found = geminiSessions().sort((a, b) => a.file.localeCompare(b.file));
+      expect(found).toHaveLength(2);
+      expect(found.map((s) => s.cwd)).toEqual([undefined, '/Users/dev/blog']);
+    } finally {
+      if (prev === undefined) delete process.env.GEMINI_CLI_HOME; else process.env.GEMINI_CLI_HOME = prev;
+      fs.rmSync(home, { recursive: true, force: true });
+    }
+  });
+  it('finds sessions for a folder by legacy project hash', () => {
     const f = `/h/.gemini/tmp/${geminiProjectHash('/Users/dev/blog')}/chats/session-1.json`;
     const all = [{ source: 'gemini' as const, id: '1', file: f, mtime: 1, size: 1 }];
     expect(sessionsForCwd('/Users/dev/blog', all)).toHaveLength(1);

@@ -16,8 +16,12 @@ export interface SessionFile {
 export const claudeRoot = () => path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects');
 export const codexRoot = () => path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'sessions');
 
-export const geminiRoot = () => path.join(process.env.GEMINI_DIR || path.join(os.homedir(), '.gemini'), 'tmp');
-/** Gemini CLI keys its per-project folder by sha256 of the project root. */
+/** GEMINI_CLI_HOME replaces the home dir; Gemini CLI then uses <home>/.gemini. */
+export const geminiRoot = () => path.join(process.env.GEMINI_CLI_HOME || os.homedir(), '.gemini', 'tmp');
+/**
+ * Older Gemini CLI keyed the per-project folder by sha256 of the project root. Newer versions use a
+ * slug of the folder name (registered in ~/.gemini/projects.json) with the root in <slug>/.project_root.
+ */
 export const geminiProjectHash = (cwd: string) => crypto.createHash('sha256').update(cwd).digest('hex');
 
 /** Claude Code names a project folder after its cwd with every non-alphanumeric char turned into "-". */
@@ -69,13 +73,23 @@ export function codexSessions(root = codexRoot()): SessionFile[] {
 }
 
 export function geminiSessions(root = geminiRoot()): SessionFile[] {
-  return walk(root, (n) => /^session-.*\.json$/.test(n))
+  const roots = new Map<string, string | undefined>();
+  const rootOf = (dir: string) => {
+    if (!roots.has(dir)) {
+      let r: string | undefined;
+      try { r = fs.readFileSync(path.join(dir, '.project_root'), 'utf8').trim() || undefined; } catch { /* legacy hash dir */ }
+      roots.set(dir, r);
+    }
+    return roots.get(dir);
+  };
+  // Subagent chats live one level deeper (chats/<parent id>/<id>.jsonl) and are skipped.
+  return walk(root, (n) => /^session-.*\.jsonl?$/.test(n))
     .filter((f) => path.basename(path.dirname(f)) === 'chats')
     .map((file) => {
-      let id = path.basename(file, '.json').replace(/^session-/, '');
+      let id = path.basename(file).replace(/\.jsonl?$/, '').replace(/^session-/, '');
       const m = head(file, 4096).match(/"sessionId"\s*:\s*"([^"]+)"/);
       if (m) id = m[1];
-      return { source: 'gemini' as const, id, file, ...stat(file) };
+      return { source: 'gemini' as const, id, file, cwd: rootOf(path.dirname(path.dirname(file))), ...stat(file) };
     });
 }
 
@@ -87,10 +101,10 @@ export function allSessions(opts: { claudeDir?: string; codexDir?: string; gemin
 
 export function sessionsForCwd(cwd: string, all: SessionFile[]): SessionFile[] {
   const enc = claudeProjectDir(cwd);
-  const gem = [geminiProjectHash(cwd), path.basename(cwd)];
+  const hash = geminiProjectHash(cwd);
   return all.filter((s) => s.cwd === cwd
     || (s.source === 'claude' && path.basename(path.dirname(s.file)) === enc)
-    || (s.source === 'gemini' && gem.includes(path.basename(path.dirname(path.dirname(s.file))))));
+    || (s.source === 'gemini' && path.basename(path.dirname(path.dirname(s.file))) === hash));
 }
 
 export function findSession(id: string, all: SessionFile[]): SessionFile | undefined {
@@ -100,7 +114,7 @@ export function findSession(id: string, all: SessionFile[]): SessionFile | undef
 export function detectSource(file: string, text: string): Source {
   if (/rollout-/.test(path.basename(file))) return 'codex';
   const first = text.slice(0, 4000);
-  if (/^\s*\{/.test(first) && /"(sessionId|projectHash)"\s*:/.test(first) && /"messages"\s*:/.test(text)) return 'gemini';
+  if (/^\s*\{/.test(first) && /"sessionId"\s*:/.test(first) && /"projectHash"\s*:/.test(first)) return 'gemini';
   if (/"type":"session_meta"|"type":\s*"response_item"/.test(first)) return 'codex';
   return 'claude';
 }
