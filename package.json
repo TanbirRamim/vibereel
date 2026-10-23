@@ -27,6 +27,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && mkdir -p dist/player && cp src/player/client.js src/player/player.css dist/player/ && chmod +x dist/cli.js",
     "test": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "demo": "npm run build && node dist/cli.js --file fixtures/demo-dark-mode.jsonl --out assets/demo.html --gif --mp4",
     "prepublishOnly": "npm run build && npm test",
     "prepare": "npm run build"
