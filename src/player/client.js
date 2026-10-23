@@ -37,7 +37,7 @@
   function base(p) { return p.split('/').pop(); }
 
   var KW = /^(const|let|var|function|return|if|else|for|while|import|from|export|default|class|extends|new|this|async|await|try|catch|throw|type|interface|def|self|None|True|False|true|false|null|undefined|fn|pub|use|mut|impl|struct|enum|match|package|func|in|of|as|with|yield|lambda|not|and|or|is|elif|public|private|static|void|int|string|boolean)$/;
-  var TOK = /(\/\/.*$|#(?![0-9a-fA-F]{3,8}\b).*$|\/\*.*?\*\/|<!--.*?--!?>)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_.]*(?:px|rem|em|ms|s|%)?\b|#[0-9a-fA-F]{3,8}\b)|([A-Za-z_$][\w$-]*)(?=\s*\()|([A-Za-z_$][\w$]*)/gm;
+  var TOK = /(\/\/.*$|#(?![0-9a-fA-F]{3,8}\b).*$|\/\*.*?\*\/|<!--[\s\S]*?--!?>)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_.]*(?:px|rem|em|ms|s|%)?\b|#[0-9a-fA-F]{3,8}\b)|([A-Za-z_$][\w$-]*)(?=\s*\()|([A-Za-z_$][\w$]*)/gm;
   function hl(line) {
     var out = '', last = 0, m;
     TOK.lastIndex = 0;
