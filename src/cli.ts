@@ -11,7 +11,7 @@ import { redactPaths } from './redact.js';
 
 export const VERSION = '0.1.0';
 
-const HELP = `vibereel ${VERSION}: turn your latest Claude Code or Codex session into a short film
+const HELP = `vibereel ${VERSION}: turn your latest Claude Code, Codex or Gemini CLI session into a short film
 
 Usage
   npx vibereel                 latest session for this folder -> vibereel-<id>.html
@@ -20,7 +20,7 @@ Usage
 
 Options
   --session <id>     pick a session by id or id prefix
-  --file <path>      render a specific .jsonl file
+  --file <path>      render a specific session file (.jsonl or Gemini .json)
   --out <file.html>  where to write the player (default: vibereel-<id>.html)
   --theme <name>     dark | light | retro            (default: dark)
   --aspect <ratio>   16:9 | 9:16                     (default: 16:9)
@@ -87,10 +87,10 @@ export async function main(argv = process.argv.slice(2), cwd = process.cwd()): P
   if (o.help) { console.log(HELP); return 0; }
   if (o.version) { console.log(VERSION); return 0; }
 
-  let pick: { file: string; id: string } | undefined;
+  let pick: { file: string; id: string; cwd?: string } | undefined;
   if (o.file) {
     if (!fs.existsSync(o.file)) { console.error(`vibereel: no such file ${o.file}`); return 1; }
-    pick = { file: o.file, id: path.basename(o.file, '.jsonl') };
+    pick = { file: o.file, id: path.basename(o.file).replace(/\.jsonl?$/, '') };
   } else {
     const all = allSessions();
     const here = sessionsForCwd(cwd, all);
@@ -100,23 +100,23 @@ export async function main(argv = process.argv.slice(2), cwd = process.cwd()): P
       for (const s of rows) {
         console.log(`${s.id.slice(0, 8)}  ${s.source.padEnd(6)}  ${ago(s.mtime).padEnd(8)}  ${kb(s.size).padStart(7)}  ${redactPaths(s.cwd ?? '?')}`);
       }
-      if (!rows.length) console.log('No Claude Code or Codex sessions found in ~/.claude/projects or ~/.codex/sessions.');
+      if (!rows.length) console.log('No Claude Code, Codex or Gemini CLI sessions found in ~/.claude/projects, ~/.codex/sessions or ~/.gemini/tmp.');
       return 0;
     }
     let s: SessionFile | undefined;
     if (o.session) s = findSession(o.session, all);
     else s = here[0];
     if (!s && !o.session && all.length) {
-      console.error(`vibereel: no sessions recorded for ${redactPaths(cwd)}.\nRun it inside a project you used Claude Code or Codex in, or pick one from: vibereel --list --all`);
+      console.error(`vibereel: no sessions recorded for ${redactPaths(cwd)}.\nRun it inside a project you used Claude Code, Codex or Gemini CLI in, or pick one from: vibereel --list --all`);
       return 1;
     }
-    if (!s) { console.error(o.session ? `vibereel: no session matching "${o.session}". Try vibereel --list --all` : 'vibereel: no Claude Code or Codex sessions found.'); return 1; }
-    pick = { file: s.file, id: s.id };
+    if (!s) { console.error(o.session ? `vibereel: no session matching "${o.session}". Try vibereel --list --all` : 'vibereel: no Claude Code, Codex or Gemini CLI sessions found.'); return 1; }
+    pick = { file: s.file, id: s.id, cwd: s.cwd ?? (here.includes(s) ? cwd : undefined) };
   }
 
   const text = fs.readFileSync(pick.file, 'utf8');
   let res;
-  try { res = build(text, pick.file, { redact: o.redact, duration: o.duration, theme: o.theme, aspect: o.aspect }); }
+  try { res = build(text, pick.file, { cwd: pick.cwd, redact: o.redact, duration: o.duration, theme: o.theme, aspect: o.aspect }); }
   catch (e: any) { console.error(`vibereel: could not read ${pick.file}: ${e.message}`); return 1; }
 
   const out = path.resolve(cwd, o.out ?? `vibereel-${pick.id.slice(0, 8)}.html`);

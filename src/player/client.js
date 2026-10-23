@@ -9,8 +9,8 @@
   if (qs.get('theme')) body.dataset.theme = qs.get('theme');
   if (qs.get('aspect')) body.dataset.aspect = qs.get('aspect');
 
-  var AGENT = R.source === 'codex' ? 'Codex' : 'Claude';
-  var AGENT_APP = R.source === 'codex' ? 'Codex' : 'Claude Code';
+  var AGENT = R.source === 'codex' ? 'Codex' : R.source === 'gemini' ? 'Gemini' : 'Claude';
+  var AGENT_APP = R.source === 'codex' ? 'Codex' : R.source === 'gemini' ? 'Gemini CLI' : 'Claude Code';
 
   /* ---------- helpers ---------- */
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }

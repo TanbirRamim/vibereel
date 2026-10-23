@@ -8,6 +8,9 @@ const PRICES: { match: RegExp; in: number; out: number; cacheRead: number; cache
   { match: /opus/i, in: 5, out: 25, cacheRead: 0.5, cacheWrite: 6.25 },
   { match: /haiku/i, in: 1, out: 5, cacheRead: 0.1, cacheWrite: 1.25 },
   { match: /sonnet|claude/i, in: 3, out: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  // before /mini/: "gemini" contains "mini"
+  { match: /gemini.*(flash|lite)/i, in: 0.3, out: 2.5, cacheRead: 0.075, cacheWrite: 0 },
+  { match: /gemini/i, in: 1.25, out: 10, cacheRead: 0.31, cacheWrite: 0 },
   { match: /mini/i, in: 0.25, out: 2, cacheRead: 0.025, cacheWrite: 0 },
   { match: /gpt|codex|^o\d/i, in: 1.25, out: 10, cacheRead: 0.125, cacheWrite: 0 },
 ];

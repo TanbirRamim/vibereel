@@ -2,11 +2,14 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseClaude } from '../src/parsers/claude';
 import { parseCodex, patchToEdits } from '../src/parsers/codex';
+import { cleanShellOutput, parseGemini } from '../src/parsers/gemini';
 import { parseSession } from '../src/index';
+import { geminiProjectHash, sessionsForCwd } from '../src/sessions';
 import { isTestCommand, lineDiff, makeTitle } from '../src/normalize';
 
 const demo = fs.readFileSync(new URL('../fixtures/demo-dark-mode.jsonl', import.meta.url), 'utf8');
 const codex = fs.readFileSync(new URL('../fixtures/codex-sample.jsonl', import.meta.url), 'utf8');
+const gemini = fs.readFileSync(new URL('../fixtures/gemini-sample.json', import.meta.url), 'utf8');
 
 describe('claude parser', () => {
   const tl = parseClaude(demo);
@@ -88,6 +91,54 @@ describe('codex parser', () => {
     const ev = patchToEdits('*** Begin Patch\n*** Delete File: a.txt\n*** Update File: b.txt\n*** Move to: c.txt\n@@\n-x\n+y\n*** End Patch', 0);
     expect(ev[0]).toMatchObject({ kind: 'tool', name: 'delete' });
     expect(ev[1]).toMatchObject({ kind: 'edit', path: 'c.txt', added: 1, removed: 1 });
+  });
+});
+
+describe('gemini parser', () => {
+  const tl = parseGemini(gemini, 'x', '/Users/dev/blog');
+  it('reads the prompt, model and session id', () => {
+    expect(tl.source).toBe('gemini');
+    expect(tl.sessionId).toBe('9f2c1a7e-4b3d-4e8a-b1c2-0d5e6f7a8b9c');
+    expect(tl.project).toBe('blog');
+    expect(tl.stats.model).toBe('gemini-2.5-pro');
+    expect(tl.events[0]).toMatchObject({ kind: 'prompt' });
+    expect(tl.stats.durationMs).toBe(390_000);
+  });
+  it('maps shell commands and tracks red to green', () => {
+    const cmds = tl.events.filter((e) => e.kind === 'command');
+    expect(cmds.map((c) => c.kind === 'command' && c.testState)).toEqual(['fail', 'pass']);
+    expect(cmds[1].kind === 'command' && cmds[1].redToGreen).toBe(true);
+    expect(cmds[0].kind === 'command' && cmds[0].output.join('\n')).not.toMatch(/Exit Code|Directory/);
+  });
+  it('turns replace/write_file into diffs and skips failed edits', () => {
+    const edits = tl.events.filter((e) => e.kind === 'edit');
+    expect(edits.map((e) => e.kind === 'edit' && e.path)).toEqual(['src/slug.ts', 'test/accents.test.ts']);
+    expect(edits[1]).toMatchObject({ created: true, added: 2 });
+    expect(tl.events.find((e) => e.kind === 'read')).toMatchObject({ path: 'src/slug.ts' });
+    expect(tl.events.find((e) => e.kind === 'search')).toMatchObject({ query: 'slugify\\(' });
+  });
+  it('sums per-message tokens, thoughts and the final reply', () => {
+    expect(tl.stats.usage).toEqual({ input: 14000, cacheRead: 24000, cacheWrite: 0, output: 1300 });
+    expect(tl.stats.costUsd).toBeGreaterThan(0);
+    expect(tl.events.find((e) => e.kind === 'thinking')).toMatchObject({ text: 'Finding the helper: Look at src/slug.ts first' });
+    expect(tl.events.at(-1)).toMatchObject({ kind: 'message', final: true });
+  });
+  it('auto-detects Gemini files', () => {
+    expect(parseSession(gemini, 'session-2026.json').source).toBe('gemini');
+  });
+  it('works without token data', () => {
+    const t = parseGemini(JSON.stringify({ sessionId: 's', messages: [{ type: 'user', timestamp: '2026-01-01T00:00:00Z', content: 'hi' }] }));
+    expect(t.stats.tokens).toBe(0);
+  });
+  it('cleans shell output', () => {
+    expect(cleanShellOutput('Command: ls\nOutput: (empty)\nError: (none)\nExit Code: 0')).toEqual({ text: '', ok: true });
+    expect(cleanShellOutput('Command: x\nOutput: \nError: boom\nExit Code: 2').ok).toBe(false);
+  });
+  it('finds sessions for a folder by project hash', () => {
+    const f = `/h/.gemini/tmp/${geminiProjectHash('/Users/dev/blog')}/chats/session-1.json`;
+    const all = [{ source: 'gemini' as const, id: '1', file: f, mtime: 1, size: 1 }];
+    expect(sessionsForCwd('/Users/dev/blog', all)).toHaveLength(1);
+    expect(sessionsForCwd('/Users/dev/other', all)).toHaveLength(0);
   });
 });
 

@@ -1,6 +1,6 @@
 # vibereel
 
-Turn your last Claude Code or Codex session into a 30-second film you can actually share.
+Turn your last Claude Code, Codex or Gemini CLI session into a 30-second film you can actually share.
 
 [![npm version](https://img.shields.io/npm/v/vibereel.svg)](https://www.npmjs.com/package/vibereel)
 [![npm downloads](https://img.shields.io/npm/dm/vibereel.svg)](https://www.npmjs.com/package/vibereel)
@@ -17,7 +17,7 @@ npx github:TanbirRamim/vibereel
 
 (The npm package is on its way. Until then this installs straight from GitHub; once it's live it's just `npx vibereel`.)
 
-Run it inside a project you've used Claude Code or Codex in. You get one self-contained `vibereel-<id>.html` file. Open it in any browser, or drop it anywhere you'd host a static page. No CDN, no tracking, nothing to install for the viewer.
+Run it inside a project you've used Claude Code, Codex or Gemini CLI in. You get one self-contained `vibereel-<id>.html` file. Open it in any browser, or drop it anywhere you'd host a static page. No CDN, no tracking, nothing to install for the viewer.
 
 Want a video for X, Slack or a PR?
 
@@ -78,11 +78,11 @@ npx vibereel [options]
 
 Exporting video needs Chrome (or Chromium, Edge or Brave) and `ffmpeg` on your machine. vibereel finds them on its own; set `CHROME_PATH` if it doesn't. If either is missing, it tells you and still writes the HTML.
 
-Sessions are read from `~/.claude/projects` and `~/.codex/sessions`. `CLAUDE_CONFIG_DIR` and `CODEX_HOME` are respected.
+Sessions are read from `~/.claude/projects`, `~/.codex/sessions` and `~/.gemini/tmp`. `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and `GEMINI_DIR` are respected.
 
 ## What it doesn't do yet
 
-- Cursor, Aider, Gemini CLI and other agents. The timeline format is shared, so a parser is the only missing piece. PRs welcome.
+- Cursor, Aider and other agents. The timeline format is shared, so a parser is the only missing piece. PRs welcome.
 - Cost is an estimate from public list prices. It won't match your bill exactly, and subscription plans don't pay per token anyway.
 - Subagent work is skipped; only the main conversation is shown.
 - Line numbers in diffs are relative to the edited snippet, not the real file.
@@ -95,7 +95,7 @@ Sessions are read from `~/.claude/projects` and `~/.codex/sessions`. `CLAUDE_CON
 No. vibereel reads the session file, writes an HTML file, and that's it. No network calls, no telemetry. The player itself has no external requests either.
 
 **Which agents work?**
-Claude Code and Codex CLI today. Cursor and Gemini CLI parsers are open issues if you want to help.
+Claude Code, Codex CLI and Gemini CLI today. A Cursor parser is an open issue if you want to help.
 
 **Why is my reel only a few seconds long?**
 Short sessions don't have enough moments to fill 30 seconds, so vibereel doesn't pad them. Use `--duration` to ask for a different length.

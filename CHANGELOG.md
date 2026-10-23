@@ -4,6 +4,7 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+- Gemini CLI sessions: found under `~/.gemini/tmp` and parsed into the same timeline (prompts, shell runs, edits, thoughts, tokens).
 - `/vibereel` slash command: install as a Claude Code plugin from this repo.
 
 ## [0.1.0] - 2026-10-10

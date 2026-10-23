@@ -1,4 +1,4 @@
-export type Source = 'claude' | 'codex';
+export type Source = 'claude' | 'codex' | 'gemini';
 
 export interface Usage {
   input: number;
