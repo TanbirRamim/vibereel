@@ -55,6 +55,7 @@ export function score(e: Event, i: number, firstPromptIdx: number, prev?: Event)
     case 'read': return 7;
     case 'search': return 3;
     case 'tool': return 2;
+    case 'subagent': return e.text ? 34 : 6;
   }
 }
 
@@ -69,6 +70,7 @@ export function baseDuration(e: Event): number {
     case 'read': return 1.1;
     case 'search': return 0.9;
     case 'tool': return 0.9;
+    case 'subagent': return 2.4;
   }
 }
 

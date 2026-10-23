@@ -41,6 +41,17 @@ export type Event =
       redToGreen?: boolean;
     })
   | (Base & { kind: 'tool'; name: string; detail: string })
+  | (Base & {
+      kind: 'subagent';
+      /** subagent type, e.g. "general-purpose" */
+      agent: string;
+      /** what it was asked, one line */
+      task: string;
+      /** what it returned (empty until the result arrives) */
+      text: string;
+      /** tool calls the subagent made, when the transcript records it */
+      tools?: number;
+    })
   | (Base & { kind: 'message'; text: string; final?: boolean });
 
 export type EventKind = Event['kind'];

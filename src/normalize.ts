@@ -111,7 +111,7 @@ export function finalize(raw: RawSession): Timeline {
   for (const e of events) {
     if (e.kind === 'edit') { files.add(e.path); added += e.added; removed += e.removed; }
     if (e.kind === 'read') files.add(e.path);
-    if (['read', 'edit', 'command', 'search', 'tool'].includes(e.kind)) tools++;
+    if (['read', 'edit', 'command', 'search', 'tool', 'subagent'].includes(e.kind)) tools++;
     if (e.kind === 'prompt') prompts++;
   }
   const firstPrompt = events.find((e) => e.kind === 'prompt');

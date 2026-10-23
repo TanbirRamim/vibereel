@@ -71,6 +71,10 @@ export function parseClaude(jsonl: string, idHint = 'session'): Timeline {
         } else if (ev.kind === 'read') {
           const body = typeof res === 'object' && res?.file?.content ? String(res.file.content) : out;
           ev.preview = stripLineNumbers(body).slice(0, 40);
+        } else if (ev.kind === 'subagent') {
+          const r = typeof res === 'object' && res ? res : {};
+          ev.text = (textOf(r.content) || out).trim();
+          if (typeof r.totalToolUseCount === 'number') ev.tools = r.totalToolUseCount;
         } else if (ev.kind === 'edit' && b.is_error) {
           // failed edit: drop it
           const i = events.indexOf(ev); if (i >= 0) events.splice(i, 1);
@@ -149,6 +153,11 @@ function toolEvent(name: string, input: Json, at: number, cwd?: string): Event |
       const todos: Json[] = Array.isArray(input.todos) ? input.todos : [];
       if (!todos.length) return null;
       return { kind: 'thinking', at, text: todos.map((t, i) => `${i + 1}. ${t.content ?? t.subject ?? ''}`).join('\n') };
+    }
+    case 'Task':
+    case 'Agent': {
+      const task = String(input.description ?? input.prompt ?? '').split('\n')[0].slice(0, 120);
+      return { kind: 'subagent', at, agent: String(input.subagent_type ?? 'general-purpose'), task, text: '' };
     }
     default: {
       const detail = String(input.description ?? input.url ?? input.query ?? input.skill ?? input.prompt ?? '').split('\n')[0];

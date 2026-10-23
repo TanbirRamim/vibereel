@@ -182,6 +182,9 @@ body { font-family: var(--sans); color: var(--text); -webkit-font-smoothing: ant
 [data-aspect="9:16"] .say { font-size: 27px; max-height: 640px; }
 .say.reply { font-size: 21px; color: var(--text-2); line-height: 1.5; }
 .say .cur { display: inline-block; width: 2px; height: 1.05em; background: var(--accent); vertical-align: -0.15em; margin-left: 2px; }
+.task { display: flex; gap: 12px; align-items: baseline; font-family: var(--mono); font-size: 14px; color: var(--text-2); margin-bottom: 14px; }
+.task span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.task .n { flex: none; color: var(--accent); }
 .plan { font-family: var(--mono); font-size: 14px; line-height: 1.9; color: var(--text-2); white-space: pre-wrap; }
 .plan div { display: flex; gap: 12px; }
 .plan .box { flex: none; width: 13px; height: 13px; border: 1.5px solid var(--line-2); border-radius: 3px; margin-top: 7px; }

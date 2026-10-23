@@ -4,6 +4,7 @@ import { parseClaude } from '../src/parsers/claude';
 import { parseCodex, patchToEdits } from '../src/parsers/codex';
 import { cleanShellOutput, parseGemini } from '../src/parsers/gemini';
 import { parseSession } from '../src/index';
+import { storyboard } from '../src/storyboard';
 import { geminiProjectHash, geminiRoot, geminiSessions, sessionsForCwd } from '../src/sessions';
 import os from 'node:os';
 import path from 'node:path';
@@ -60,6 +61,32 @@ describe('claude parser', () => {
   });
   it('throws on files with no messages', () => {
     expect(() => parseClaude('{"type":"summary"}\n')).toThrow();
+  });
+});
+
+describe('claude subagents', () => {
+  const rec = (o: object) => JSON.stringify({ cwd: '/w', sessionId: 's', ...o });
+  const jsonl = [
+    rec({ type: 'user', timestamp: '2026-10-08T09:00:00Z', message: { role: 'user', content: 'Audit the repo' } }),
+    rec({ type: 'assistant', timestamp: '2026-10-08T09:00:05Z', message: { id: 'm1', model: 'claude-x', usage: { input_tokens: 100, output_tokens: 10 }, content: [
+      { type: 'tool_use', id: 't1', name: 'Task', input: { description: 'Find dead code', prompt: 'Look for unused exports\nin src', subagent_type: 'Explore' } },
+    ] } }),
+    rec({ type: 'user', isSidechain: true, timestamp: '2026-10-08T09:00:06Z', message: { role: 'user', content: 'Look for unused exports' } }),
+    rec({ type: 'assistant', isSidechain: true, timestamp: '2026-10-08T09:00:08Z', message: { id: 'side1', usage: { input_tokens: 5000, output_tokens: 500 }, content: [{ type: 'text', text: 'side work' }] } }),
+    rec({ type: 'user', timestamp: '2026-10-08T09:01:00Z', toolUseResult: { status: 'completed', content: [{ type: 'text', text: 'Two unused exports in src/a.ts' }], totalToolUseCount: 7 },
+      message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't1', content: [{ type: 'text', text: 'Two unused exports in src/a.ts' }] }] } }),
+  ].join('\n');
+  const t = parseClaude(jsonl);
+  it('turns a Task call into a subagent event with its result and tool count', () => {
+    const sub = t.events.find((e) => e.kind === 'subagent');
+    expect(sub).toMatchObject({ kind: 'subagent', agent: 'Explore', task: 'Find dead code', text: 'Two unused exports in src/a.ts', tools: 7 });
+    expect(t.events.some((e) => e.kind === 'message' && e.text === 'side work')).toBe(false);
+  });
+  it('counts subagent tokens once (sidechain usage is not added)', () => {
+    expect(t.stats.usage.input).toBe(100);
+  });
+  it('gets a scene in the film', () => {
+    expect(storyboard(t).scenes.some((s) => s.kind === 'subagent')).toBe(true);
   });
 });
 

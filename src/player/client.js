@@ -223,7 +223,7 @@
     return { real: real, tok: lerp(a.tokens, bx.tok, f), cost: lerp(a.cost, bx.cost, f), tools: tools };
   }
 
-  var EDITOR_KINDS = { prompt: 1, thinking: 1, message: 1, edit: 1, read: 1 };
+  var EDITOR_KINDS = { prompt: 1, thinking: 1, message: 1, edit: 1, read: 1, subagent: 1 };
   var lastEd = null, lastTerm = null;
 
   function nowLabel(s) {
@@ -237,6 +237,7 @@
       case 'command': return e.isTest ? 'Running tests' : '$ ' + e.command.split('\n')[0];
       case 'tool': return e.name + (e.detail ? ' · ' + e.detail : '');
       case 'message': return e.final ? 'Done' : 'Replying';
+      case 'subagent': return 'Subagent · ' + e.task;
     }
     return '';
   }
@@ -267,7 +268,7 @@
         }).join('') + '</div></div>';
       } else {
         var who = e.kind === 'prompt' ? '<div class="who"><span class="av me">Y</span>You</div>'
-          : '<div class="who"><span class="av">' + AGENT[0] + '</span>' + AGENT + (e.kind === 'thinking' ? ' · plan' : '') + '</div>';
+          : '<div class="who"><span class="av">' + AGENT[0] + '</span>' + AGENT + (e.kind === 'thinking' ? ' · plan' : e.kind === 'subagent' ? ' · subagent · ' + esc(e.agent) : '') + '</div>';
         var bodyHtml;
         if (e.kind === 'thinking' && /^\s*(\d+[.)]|[-*])\s/m.test(e.text)) {
           bodyHtml = '<div class="plan" id="plan">' + e.text.split('\n').filter(function (l) { return l.trim(); }).slice(0, 8).map(function (l) {
@@ -276,7 +277,10 @@
         } else {
           bodyHtml = '<div class="say' + (e.kind === 'prompt' ? '' : ' reply') + '" id="say"></div>';
         }
-        el.tabs.innerHTML = '<div class="tab on"><span>' + (e.kind === 'prompt' ? 'prompt' : e.kind === 'thinking' ? 'plan' : 'reply') + '</span></div>';
+        if (e.kind === 'subagent') {
+          bodyHtml = '<div class="task"><span>' + esc(e.task) + '</span>' + (e.tools != null ? '<span class="n">' + e.tools + ' tool call' + (e.tools === 1 ? '' : 's') + '</span>' : '') + '</div>' + bodyHtml;
+        }
+        el.tabs.innerHTML = '<div class="tab on"><span>' + (e.kind === 'prompt' ? 'prompt' : e.kind === 'thinking' ? 'plan' : e.kind === 'subagent' ? 'subagent' : 'reply') + '</span></div>';
         el.ed.innerHTML = '<div class="talk" id="talk">' + who + bodyHtml + '</div>';
       }
     }

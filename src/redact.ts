@@ -89,7 +89,7 @@ export function trimTimeline(tl: Timeline, o: RedactOptions = {}): Timeline {
   const maxOut = o.maxOutputLines ?? 14, width = o.maxLineLength ?? 140, chars = o.maxTextChars ?? 700;
   const events = tl.events.map((e): Event => {
     switch (e.kind) {
-      case 'prompt': case 'thinking': case 'message': return { ...e, text: clip(e.text, chars) };
+      case 'prompt': case 'thinking': case 'message': case 'subagent': return { ...e, text: clip(e.text, chars) };
       case 'command': return { ...e, command: clip(e.command, 300), output: clipLines(e.output, maxOut, width) };
       case 'read': return { ...e, preview: e.preview ? clipLines(e.preview, 24, width) : undefined };
       case 'edit': return { ...e, diff: e.diff.slice(0, 400).map((d) => ({ ...d, text: clip(d.text.replace(/\t/g, '  '), width) })) };
@@ -115,6 +115,7 @@ export function redactTimeline(tl: Timeline, o: RedactOptions = {}): Timeline {
       }
       case 'command': return { ...e, command: r(e.command), output: e.output.map(r) };
       case 'tool': return { ...e, detail: r(e.detail) };
+      case 'subagent': return { ...e, task: r(e.task), text: r(e.text) };
     }
   });
   return {
