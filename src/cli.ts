@@ -9,7 +9,7 @@ import { exportVideo, ExportError } from './export.js';
 import { ASPECTS, THEMES, type Aspect, type Theme } from './html.js';
 import { redactPaths } from './redact.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 const HELP = `vibereel ${VERSION}: turn your latest Claude Code, Codex or Gemini CLI session into a short film
 

@@ -4,8 +4,11 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-23
+
 - Gemini CLI sessions: found under `~/.gemini/tmp` and parsed into the same timeline (prompts, shell runs, edits, thoughts, tokens).
 - Gemini CLI: read the current append-only `.jsonl` session logs (with `$set`, `$patch` and `$rewindTo` records) as well as legacy `.json` files, match slug-named project folders via `.project_root`, and honour `GEMINI_CLI_HOME` instead of the non-existent `GEMINI_DIR`. User prompts use `displayContent` when present.
+- Transcript parsers for Claude Code and Codex no longer use regexes that could backtrack for a long time on huge lines (CodeQL polynomial ReDoS).
 - `/vibereel` slash command: install as a Claude Code plugin from this repo.
 
 ## [0.1.0] - 2026-10-10
@@ -22,5 +25,6 @@ First public release.
 - Redaction on by default: home paths, API keys, tokens, URL passwords, `SECRET=` style assignments, emails and `.env` values. `--no-redact` to turn it off.
 - `--list`, `--session`, `--file`, `--json` and `--open`.
 
-[Unreleased]: https://github.com/TanbirRamim/vibereel/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/TanbirRamim/vibereel/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/TanbirRamim/vibereel/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/TanbirRamim/vibereel/releases/tag/v0.1.0
