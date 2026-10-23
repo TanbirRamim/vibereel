@@ -20,13 +20,23 @@ function jsonStringField(src: string, key: string): string | undefined {
 
 /** Find an apply_patch body, either raw or inside a JS/JSON string literal. */
 export function extractPatch(src: string): string | undefined {
-  const lit = src.match(/("|`)(\*\*\* Begin Patch(?:[^\\]|\\.)*?\*\*\* End Patch[^"`]*)\1/);
-  if (lit) {
-    if (lit[1] === '`') return lit[2];
-    try { return JSON.parse(`"${lit[2]}"`); } catch { /* fall through */ }
+  // indexOf instead of one big regex: these strings can be huge (and CodeQL flags the regex as ReDoS)
+  const BEGIN = '*** Begin Patch', END = '*** End Patch';
+  const i = src.indexOf(BEGIN);
+  if (i < 0) return undefined;
+  const j = src.indexOf(END, i);
+  if (j < 0) return undefined;
+  const q = src[i - 1];
+  if (q === '"' || q === '`') {
+    let k = j + END.length;
+    while (k < src.length && src[k] !== '"' && src[k] !== '`') k++;
+    if (src[k] === q) {
+      const body = src.slice(i, k);
+      if (q === '`') return body;
+      try { return JSON.parse(`"${body}"`); } catch { /* fall through */ }
+    }
   }
-  const raw = src.match(/\*\*\* Begin Patch[\s\S]*?\*\*\* End Patch/);
-  return raw?.[0];
+  return src.slice(i, j + END.length);
 }
 
 /** Codex apply_patch format -> edit events. */

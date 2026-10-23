@@ -17,11 +17,12 @@ function textOf(content: Json): string {
 function slashCommand(text: string): string | null {
   const name = text.match(/<command-name>([^<]*)<\/command-name>/)?.[1];
   if (!name) return null;
-  const args = text.match(/<command-args>([\s\S]*?)<\/command-args>/)?.[1]?.trim();
+  const a = text.indexOf('<command-args>'), b = a < 0 ? -1 : text.indexOf('</command-args>', a);
+  const args = b < 0 ? undefined : text.slice(a + '<command-args>'.length, b).trim();
   return [name.trim(), args].filter(Boolean).join(' ');
 }
 
-const stripLineNumbers = (s: string) => s.split('\n').map((l) => l.replace(/^\s*\d+[\t→]/, ''));
+const stripLineNumbers = (s: string) => s.split('\n').map((l) => l.replace(/^ *\d+[\t→]/, ''));
 
 export function parseClaude(jsonl: string, idHint = 'session'): Timeline {
   const lines = jsonl.split('\n');
