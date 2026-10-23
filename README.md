@@ -2,8 +2,6 @@
 
 Turn your last Claude Code, Codex or Gemini CLI session into a 30-second film you can actually share.
 
-[![npm version](https://img.shields.io/npm/v/vibereel.svg)](https://www.npmjs.com/package/vibereel)
-[![npm downloads](https://img.shields.io/npm/dm/vibereel.svg)](https://www.npmjs.com/package/vibereel)
 [![CI](https://github.com/TanbirRamim/vibereel/actions/workflows/ci.yml/badge.svg)](https://github.com/TanbirRamim/vibereel/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -22,7 +20,7 @@ Run it inside a project you've used Claude Code, Codex or Gemini CLI in. You get
 Want a video for X, Slack or a PR?
 
 ```sh
-npx vibereel --gif --mp4
+npx github:TanbirRamim/vibereel --gif --mp4
 ```
 
 ## As a Claude Code slash command
@@ -61,7 +59,7 @@ Pattern matching can't catch everything. Watch your reel once before you post it
 ## Options
 
 ```
-npx vibereel [options]
+npx github:TanbirRamim/vibereel [options]
 
   --list             recent sessions for this folder (add --all for every project)
   --session <id>     pick a session by id or id prefix
