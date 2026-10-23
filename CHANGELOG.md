@@ -4,7 +4,12 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
-- Fix CodeQL alerts: open the output without a shell on Windows, escape quotes in player HTML attributes, and match `--!>` comment ends in the highlighter.
+## [0.3.0] - 2026-10-23
+
+- Task subagents show up as their own scenes, so you can see what each one did (#22).
+- 9:16 file tree: a flat path list, so folders never get split across columns (#23).
+- An end-to-end MP4/GIF export test that runs in CI (#21).
+- Fix CodeQL alerts: open the output without a shell on Windows, escape quotes in player HTML attributes, and match `--!>` comment ends in the highlighter (#19).
 
 ## [0.2.0] - 2026-10-23
 
@@ -27,6 +32,7 @@ First public release.
 - Redaction on by default: home paths, API keys, tokens, URL passwords, `SECRET=` style assignments, emails and `.env` values. `--no-redact` to turn it off.
 - `--list`, `--session`, `--file`, `--json` and `--open`.
 
-[Unreleased]: https://github.com/TanbirRamim/vibereel/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/TanbirRamim/vibereel/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/TanbirRamim/vibereel/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/TanbirRamim/vibereel/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/TanbirRamim/vibereel/releases/tag/v0.1.0
