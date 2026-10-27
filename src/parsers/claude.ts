@@ -13,13 +13,22 @@ function textOf(content: Json): string {
   return '';
 }
 
-/** Return the first real old-file line represented by Claude's structured diff. */
-function structuredPatchStartLine(result: Json): number | undefined {
-  const hunks: Json[] = result && Array.isArray(result.structuredPatch) ? result.structuredPatch : [];
-  for (const hunk of hunks) {
-    if (Number.isInteger(hunk?.oldStart) && hunk.oldStart > 0) return hunk.oldStart;
+/**
+ * Line in the original file where the edit's diff starts. Claude's Edit result carries the old
+ * string and the whole original file, so find it there. Otherwise use structuredPatch, skipping
+ * the context lines at the top of the hunk, since the scene's diff doesn't include them.
+ */
+function editStartLine(result: Json): number | undefined {
+  if (!result || typeof result !== 'object') return undefined;
+  if (typeof result.originalFile === 'string' && typeof result.oldString === 'string' && result.oldString) {
+    const i = result.originalFile.indexOf(result.oldString);
+    if (i >= 0) return result.originalFile.slice(0, i).split('\n').length;
   }
-  return undefined;
+  const hunk = Array.isArray(result.structuredPatch) ? result.structuredPatch.find((h: Json) => Number.isInteger(h?.oldStart) && h.oldStart > 0) : undefined;
+  if (!hunk) return undefined;
+  const lines: unknown[] = Array.isArray(hunk.lines) ? hunk.lines : [];
+  const context = lines.findIndex((l) => typeof l !== 'string' || !l.startsWith(' '));
+  return hunk.oldStart + Math.max(0, context);
 }
 
 /** Turn a slash-command wrapper into "/name args"; returns null for other wrappers. */
@@ -88,12 +97,13 @@ export function parseClaude(jsonl: string, idHint = 'session'): Timeline {
           // failed edit: drop it
           const i = events.indexOf(ev); if (i >= 0) events.splice(i, 1);
         } else if (ev.kind === 'edit') {
-          // Older Claude logs and other providers may not include structuredPatch.
-          const startLine = structuredPatchStartLine(res);
-          if (startLine !== undefined) ev.startLine = startLine;
           if (ev.created && typeof res === 'object' && res?.type === 'update' && typeof res.originalFile === 'string') {
+            // A Write over an existing file: the diff covers the whole file, so it starts at line 1.
             const fixed = makeEdit(ev.at, ev.path, res.originalFile, res.content ?? '');
             Object.assign(ev, fixed);
+          } else if (!ev.created) {
+            // Older Claude logs may have neither, and then the player falls back to line 1.
+            const startLine = editStartLine(res);
             if (startLine !== undefined) ev.startLine = startLine;
           }
         }

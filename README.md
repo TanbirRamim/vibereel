@@ -83,7 +83,7 @@ Sessions are read from `~/.claude/projects`, `~/.codex/sessions` and `~/.gemini/
 - Cursor, Aider and other agents. The timeline format is shared, so a parser is the only missing piece. PRs welcome.
 - Cost is an estimate from public list prices. It won't match your bill exactly, and subscription plans don't pay per token anyway.
 - Subagent work is skipped; only the main conversation is shown.
-- Line numbers in diffs are relative to the edited snippet, not the real file.
+- Line numbers in diffs match the real file for Claude Code. Codex and Gemini logs still count from 1.
 - Video export takes about a minute, because it renders each frame in headless Chrome.
 - Redaction is pattern-based. It's good, not perfect.
 
@@ -107,6 +107,10 @@ Only with their OK. Sessions often contain private code even after redaction.
 ## Contributing
 
 Issues labelled [good first issue](https://github.com/TanbirRamim/vibereel/labels/good%20first%20issue) are a nice way in, and new parsers and themes are very welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, and please never attach real session logs to issues or PRs. Changes are listed in the [CHANGELOG](CHANGELOG.md). Security reports go through [SECURITY.md](SECURITY.md).
+
+Thanks to everyone who has contributed:
+
+- [@Niranjan7407](https://github.com/Niranjan7407): real line numbers in Claude edit scenes ([#27](https://github.com/TanbirRamim/vibereel/pull/27))
 
 ## Development
 

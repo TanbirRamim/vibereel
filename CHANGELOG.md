@@ -4,6 +4,8 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+- Claude Code edit scenes show the real line numbers from the file, not 1, 2, 3 (#27, thanks @Niranjan7407).
+
 ## [0.3.0] - 2026-10-23
 
 - Task subagents show up as their own scenes, so you can see what each one did (#22).

@@ -82,6 +82,31 @@ describe('claude parser', () => {
     expect(legacy).toMatchObject({ kind: 'edit' });
     expect(legacy?.kind === 'edit' && legacy.startLine).toBeUndefined();
   });
+  it('finds the edit start line exactly and ignores hunk context', () => {
+    const record = (o: object) => JSON.stringify({ cwd: '/work/app', sessionId: 'line-number-test', ...o });
+    const editLog = (tool: string, input: object, result: object) => [
+      record({ type: 'user', timestamp: '2026-10-27T09:00:00.000Z', message: { role: 'user', content: 'Change a line' } }),
+      record({ type: 'assistant', timestamp: '2026-10-27T09:00:01.000Z', message: { id: 'm1', usage: { input_tokens: 1, output_tokens: 1 }, content: [
+        { type: 'tool_use', id: 'edit-1', name: tool, input: { file_path: '/work/app/a.ts', ...input } },
+      ] } }),
+      record({ type: 'user', timestamp: '2026-10-27T09:00:02.000Z', toolUseResult: result,
+        message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'edit-1', content: 'Updated' }] } }),
+    ].join('\n');
+    const startOf = (log: string) => {
+      const ev = parseClaude(log).events.find((e) => e.kind === 'edit');
+      return ev?.kind === 'edit' ? ev.startLine : 'missing';
+    };
+    const file = ['one', 'two', 'three', 'four', 'five', 'six'].join('\n');
+    const patch = [{ oldStart: 2, oldLines: 4, newStart: 2, newLines: 4, lines: [' two', ' three', ' four', '-five', '+FIVE'] }];
+
+    // oldString found in the original file wins
+    expect(startOf(editLog('Edit', { old_string: 'four\nfive', new_string: 'four\nFIVE' },
+      { type: 'update', oldString: 'four\nfive', originalFile: file, structuredPatch: patch }))).toBe(4);
+    // without it, skip the hunk's leading context lines
+    expect(startOf(editLog('Edit', { old_string: 'five', new_string: 'FIVE' }, { structuredPatch: patch }))).toBe(5);
+    // a Write over an existing file diffs the whole file, so it keeps line 1
+    expect(startOf(editLog('Write', { content: 'new' }, { type: 'update', originalFile: file, content: 'new', structuredPatch: patch }))).toBeUndefined();
+  });
 });
 
 describe('claude subagents', () => {
