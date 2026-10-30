@@ -9,6 +9,9 @@ describe('parseCli', () => {
   it('has sane defaults', () => {
     expect(parseCli([])).toMatchObject({ theme: 'dark', aspect: '16:9', duration: 30, redact: true, gif: false, mp4: false, list: false });
   });
+    it('accepts the dracula theme', () => {
+    expect(parseCli(['--theme', 'dracula']).theme).toBe('dracula');
+  });
   it('reads every flag', () => {
     const o = parseCli(['--session', 'abc', '--out', 'x.html', '--theme', 'retro', '--aspect', '9:16', '--duration', '45s', '--gif', '--mp4', '--open', '--no-redact', '--json']);
     expect(o).toMatchObject({ session: 'abc', out: 'x.html', theme: 'retro', aspect: '9:16', duration: 45, gif: true, mp4: true, open: true, redact: false, json: true });

@@ -22,7 +22,7 @@ Options
   --session <id>     pick a session by id or id prefix
   --file <path>      render a specific session file (.jsonl or Gemini .json)
   --out <file.html>  where to write the player (default: vibereel-<id>.html)
-  --theme <name>     dark | light | retro            (default: dark)
+  --theme <name>     dark | light | retro | dracula            (default: dark)
   --aspect <ratio>   16:9 | 9:16                     (default: 16:9)
   --duration <sec>   target length in seconds        (default: 30)
   --gif, --mp4       export video next to the HTML file

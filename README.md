@@ -65,7 +65,7 @@ npx github:TanbirRamim/vibereel [options]
   --session <id>     pick a session by id or id prefix
   --file <path>      render a specific .jsonl file
   --out <file.html>  where to write the player (default: vibereel-<id>.html)
-  --theme <name>     dark | light | retro
+  --theme <name>     dark | light | retro | dracula
   --aspect <ratio>   16:9 | 9:16
   --duration <sec>   target length, 8-180 (default 30)
   --gif, --mp4       also export video next to the HTML

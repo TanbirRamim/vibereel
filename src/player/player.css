@@ -58,6 +58,36 @@
   --fn: #2457c5;
   --shadow: 0 24px 60px -24px rgba(30, 30, 20, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.02);
 }
+
+[data-theme="dracula"] {
+  --page: #282a36;
+  --win: #282a36;
+  --chrome: #21222c;
+  --pane: #21222c;
+  --line: #44475a;
+  --line-2: #6272a4;
+  --text: #f8f8f2;
+  --text-2: #d6d6e7;
+  --muted: #a0a4bc;
+  --faint: #6272a4;
+  --accent: #bd93f9;
+  --accent-ink: #282a36;
+  --add: #50fa7b;
+  --add-bg: rgba(80, 250, 123, 0.12);
+  --add-strong: rgba(80, 250, 123, 0.28);
+  --del: #ff5555;
+  --del-bg: rgba(255, 85, 85, 0.12);
+  --del-strong: rgba(255, 85, 85, 0.28);
+  --hl: rgba(189, 147, 249, 0.12);
+  --kw: #ff79c6;
+  --str: #f1fa8c;
+  --num: #bd93f9;
+  --com: #6272a4;
+  --fn: #8be9fd;
+  --shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.45),
+            0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
 [data-theme="retro"] {
   --mono: "IBM Plex Mono", "VT323", "SF Mono", ui-monospace, Menlo, monospace;
   --sans: var(--mono);
