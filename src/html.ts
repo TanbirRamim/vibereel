@@ -3,9 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Reel } from './storyboard.js';
 
-export type Theme = 'dark' | 'light' | 'retro';
+export type Theme = 'dark' | 'light' | 'retro' | 'dracula';
 export type Aspect = '16:9' | '9:16';
-export const THEMES: Theme[] = ['dark', 'light', 'retro'];
+export const THEMES: Theme[] = ['dark', 'light', 'retro', 'dracula'];
 export const ASPECTS: Aspect[] = ['16:9', '9:16'];
 
 const here = path.dirname(fileURLToPath(import.meta.url));

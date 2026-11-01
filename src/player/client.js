@@ -469,13 +469,13 @@
   function pause() { playing = false; cancelAnimationFrame(raf); }
   function seekPlay(t) { tNow = t; render(t); if (playing) play(); }
 
-  var THEMES = ['dark', 'light', 'retro'];
+  var THEMES = ['dark', 'light', 'retro', 'dracula'];
   addEventListener('keydown', function (e) {
     if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
     else if (e.key === 'ArrowRight') seekPlay(Math.min(R.duration, tNow + 2));
     else if (e.key === 'ArrowLeft') seekPlay(Math.max(0, tNow - 2));
     else if (e.key === 'r') { tNow = 0; play(); }
-    else if (e.key === 't') { body.dataset.theme = THEMES[(THEMES.indexOf(body.dataset.theme) + 1) % 3]; render(tNow); }
+    else if (e.key === 't') { body.dataset.theme = THEMES[(THEMES.indexOf(body.dataset.theme) + 1) % THEMES.length]; render(tNow); }
     else if (e.key === 'a') { body.dataset.aspect = body.dataset.aspect === '9:16' ? '16:9' : '9:16'; build(); render(tNow); }
   });
   document.getElementById('stage').addEventListener('click', function (e) { if (!e.target.closest('#scrub')) { playing ? pause() : play(); } });
