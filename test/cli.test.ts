@@ -9,7 +9,7 @@ describe('parseCli', () => {
   it('has sane defaults', () => {
     expect(parseCli([])).toMatchObject({ theme: 'dark', aspect: '16:9', duration: 30, redact: true, gif: false, mp4: false, list: false });
   });
-    it('accepts the dracula theme', () => {
+  it('accepts the dracula theme', () => {
     expect(parseCli(['--theme', 'dracula']).theme).toBe('dracula');
   });
   it('reads every flag', () => {

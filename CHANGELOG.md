@@ -4,6 +4,7 @@ All notable changes to this project are written down here. The format follows [K
 
 ## [Unreleased]
 
+- A Dracula theme: `--theme dracula`, or press `t` in the player to cycle to it (#29, thanks @Praveenkanna16).
 - Claude Code edit scenes show the real line numbers from the file, not 1, 2, 3 (#27, thanks @Niranjan7407).
 
 ## [0.3.0] - 2026-10-23

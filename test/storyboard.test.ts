@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseClaude } from '../src/parsers/claude';
 import { storyboard } from '../src/storyboard';
-import { renderHtml } from '../src/html';
+import { renderHtml, THEMES } from '../src/html';
 import type { Event, Timeline } from '../src/types';
 
 const tl = parseClaude(fs.readFileSync(new URL('../fixtures/demo-dark-mode.jsonl', import.meta.url), 'utf8'));
@@ -51,6 +51,18 @@ describe('storyboard', () => {
   it('does not stretch tiny sessions into slow motion', () => {
     const tiny = { ...tl, events: [tl.events[0]], tokensAt: [0], costAt: [0] };
     expect(storyboard(tiny).duration).toBeLessThan(12);
+  });
+});
+
+describe('themes', () => {
+  const css = fs.readFileSync(new URL('../src/player/player.css', import.meta.url), 'utf8');
+  const client = fs.readFileSync(new URL('../src/player/client.js', import.meta.url), 'utf8');
+  it('every theme has colors in player.css', () => {
+    for (const theme of THEMES) expect(css).toContain(`[data-theme="${theme}"]`);
+  });
+  it('the player cycles through the same themes as the CLI', () => {
+    const list = client.match(/var THEMES = \[([^\]]*)\]/)?.[1] ?? '';
+    expect(list.split(',').map((s) => s.trim().replace(/'/g, ''))).toEqual(THEMES);
   });
 });
 

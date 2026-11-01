@@ -111,6 +111,7 @@ Issues labelled [good first issue](https://github.com/TanbirRamim/vibereel/label
 Thanks to everyone who has contributed:
 
 - [@Niranjan7407](https://github.com/Niranjan7407): real line numbers in Claude edit scenes ([#27](https://github.com/TanbirRamim/vibereel/pull/27))
+- [@Praveenkanna16](https://github.com/Praveenkanna16): Dracula theme ([#29](https://github.com/TanbirRamim/vibereel/pull/29))
 
 ## Development
 
